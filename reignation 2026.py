@@ -74,10 +74,29 @@ if check_password():
 
     st.divider()
 
-    # --- 5. نظام البحث الرباعي ---
+   # --- 5. نظام البحث الرباعي المصحح ---
     st.subheader("🔍 محرك البحث السريع")
     s1, s2, s3, s4 = st.columns(4)
+    
     with s1: search_id = st.text_input("الرقم الفردي/الأمني")
     with s2: search_name = st.text_input("اسم المتطوع")
     with s3: search_phone = st.text_input("رقم الهاتف")
-    with s4: filter_status = st.selectbox("تصفية حسب الحالة", ["الكل"] + list
+    with s4: 
+        # هذا هو السطر الذي كان يحتوي على الخطأ، قمنا بتبسيطه هنا
+        if 'Status' in df.columns:
+            status_list = ["الكل"] + list(df['Status'].dropna().unique())
+        else:
+            status_list = ["الكل"]
+        filter_status = st.selectbox("تصفية حسب الحالة", status_list)
+
+    # منطق الفلترة الذكي
+    filtered_df = df.copy()
+    
+    if search_id:
+        filtered_df = filtered_df[filtered_df.astype(str).apply(lambda x: x.str.contains(search_id)).any(axis=1)]
+    if search_name:
+        filtered_df = filtered_df[filtered_df.astype(str).apply(lambda x: x.str.contains(search_name, case=False)).any(axis=1)]
+    if filter_status != "الكل":
+        filtered_df = filtered_df[filtered_df['Status'] == filter_status]
+    
+    st.dataframe(filtered_df, use_container_width=True)
