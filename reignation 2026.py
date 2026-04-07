@@ -27,7 +27,7 @@ def check_password():
 if check_password():
     # --- 2. الاتصال بقاعدة البيانات المثبتة ---
     # ملاحظة: استبدل الرابط أدناه برابط ملف Google Sheets الخاص بك
-    SHEET_URL = "https://docs.google.com/spreadsheets/d/your_sheet_id_here/edit#gid=0"
+    SHEET_URL = "https://bdcjoorg-my.sharepoint.com/:x:/g/personal/zaltahat_bdc_org_jo/IQABP_FEs97DRZNQFxtFvyRGAe2xdQxDW6L3jTRC3S803SU=0"
     
     try:
         conn = st.connection("gsheets", type=GSheetsConnection)
