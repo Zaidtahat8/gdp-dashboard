@@ -1,112 +1,83 @@
-import pandas as pd
 import streamlit as st
-import plotly.express as px
+import pandas as pd
+from streamlit_gsheets import GSheetsConnection
 
-# إعدادات الصفحة
-st.set_page_config(page_title="نظام إدارة متطوعي مخيم الأزرق", layout="wide", page_icon="📊")
+# --- 1. إعدادات الصفحة والأمان ---
+st.set_page_config(page_title="نظام تدقيق مخيم الأزرق 2026", layout="wide")
 
-st.title("📊 نظام إدارة وأرشفة سجلات المتطوعين - التطوير الذكي")
-st.markdown("---")
+USER_CREDENTIALS = {"alaa_admin": "azraq2026"} # يمكنك إضافة مستخدمين آخرين هنا
 
-# 1. تحميل الملف
-uploaded_file = st.file_uploader("يرجى رفع ملف الإكسل (Excel)", type=['xlsx'])
+def check_password():
+    if "authenticated" not in st.session_state:
+        st.session_state["authenticated"] = False
+    if not st.session_state["authenticated"]:
+        st.title("🔐 تسجيل الدخول - نظام HR")
+        user = st.text_input("اسم المستخدم")
+        pw = st.text_input("كلمة المرور", type="password")
+        if st.button("دخول"):
+            if user in USER_CREDENTIALS and USER_CREDENTIALS[user] == pw:
+                st.session_state["authenticated"] = True
+                st.rerun()
+            else:
+                st.error("❌ البيانات غير صحيحة")
+        return False
+    return True
 
-if uploaded_file:
+# --- تنفيذ البرنامج بعد تسجيل الدخول ---
+if check_password():
+    # --- 2. الاتصال بقاعدة البيانات المثبتة ---
+    # ملاحظة: استبدل الرابط أدناه برابط ملف Google Sheets الخاص بك
+    SHEET_URL = "https://docs.google.com/spreadsheets/d/your_sheet_id_here/edit#gid=0"
+    
     try:
-        df = pd.read_excel(uploaded_file)
+        conn = st.connection("gsheets", type=GSheetsConnection)
+        df = conn.read(spreadsheet=SHEET_URL)
         
-        # تنظيف البيانات الأساسية وتحويل المعرفات إلى نصوص
-        id_cols = ['Individual Number', 'الرقم الأمني', 'EmpNo', 'Case Number', 'رقم الهاتف']
+        # تنظيف البيانات تلقائياً (تحويل الأرقام لنصوص لمنع ظهور الفواصل)
+        id_cols = ['Individual Number', 'الرقم الأمني', 'EmpNo', 'رقم الهاتف']
         for col in id_cols:
             if col in df.columns:
-                # تحويل إلى نص، إزالة الكسور، وإزالة المسافات
                 df[col] = df[col].astype(str).str.replace('.0', '', regex=False).str.strip()
-
-        # --- لوحة الإحصائيات العامة (Dashboard) ---
-        st.subheader("📈 نظرة عامة على القوى العاملة")
-        
-        total_contracts = len(df)
-        unique_volunteers = df['Individual Number'].nunique()
-        active_projects = df['Project'].nunique()
-        
-        m1, m2, m3 = st.columns(3)
-        m1.metric("إجمالي العقود المسجلة", total_contracts)
-        m2.metric("عدد المتطوعين (بدون تكرار)", unique_volunteers)
-        m3.metric("عدد المشاريع النشطة", active_projects)
-        
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown("#### توزيع المتطوعين حسب المشروع")
-            project_counts = df.groupby('Project')['Individual Number'].nunique().reset_index()
-            fig_proj = px.bar(project_counts, x='Project', y='Individual Number', 
-                              labels={'Individual Number': 'عدد المتطوعين'},
-                              color='Project', template="seaborn")
-            st.plotly_chart(fig_proj, use_container_width=True)
-        with c2:
-            st.markdown("#### توزيع الجنسين (Gender)")
-            if 'EmpGender' in df.columns:
-                gender_counts = df['EmpGender'].value_counts().reset_index()
-                fig_gen = px.pie(gender_counts, names='EmpGender', values='count', 
-                                 hole=0.4, template="seaborn")
-                st.plotly_chart(fig_gen, use_container_width=True)
-
-        st.markdown("---")
-
-        # --- الخطوة الثانية: نظام البحث المطور ---
-        st.subheader("🔍 البحث الشامل عن متطوع")
-        
-        # تقسيم البحث إلى 4 خانات
-        s1, s2, s3, s4 = st.columns(4)
-        with s1:
-            search_id = st.text_input("الرقم الفردي/الأمني:")
-        with s2:
-            search_case = st.text_input("رقم الحالة (Case No):")
-        with s3:
-            search_phone = st.text_input("رقم الهاتف:")
-        with s4:
-            search_name = st.text_input("الاسم (عربي/إنجليزي):")
-
-        # منطق البحث المتعدد
-        query = pd.DataFrame() # إنشاء إطار بيانات فارغ للنتائج
-        
-        if search_id:
-            query = df[(df['Individual Number'] == search_id) | (df['الرقم الأمني'] == search_id)]
-        elif search_case:
-            query = df[df['Case Number'] == search_case]
-        elif search_phone:
-            query = df[df['رقم الهاتف'] == search_phone]
-        elif search_name:
-            query = df[(df['Name'].str.contains(search_name, na=False)) | (df['En Full Name'].str.contains(search_name, na=False, case=False))]
-
-        # عرض النتائج
-        if not query.empty:
-            latest_record = query.iloc[-1]
-            
-            with st.expander(f"✅ تم العثور على {len(query)} سجلات - انقر للتفاصيل", expanded=True):
-                col_a, col_b, col_c = st.columns(3)
-                with col_a:
-                    st.info(f"**الاسم:**\n\n{latest_record['Name']}")
-                    st.write(f"**رقم الحالة:** {latest_record['Case Number']}")
-                with col_b:
-                    st.info(f"**الموقع الحالي:**\n\n{latest_record['Centre']}")
-                    st.write(f"**رقم الهاتف:** {latest_record['رقم الهاتف']}")
-                with col_c:
-                    st.info(f"**تاريخ آخر تعيين:**\n\n{latest_record['Start Date']}")
-                    st.write(f"**إجمالي العقود السابقة:** {len(query)}")
-
-                st.markdown("#### 📜 التاريخ الوظيفي التفصيلي")
-                # عرض الأعمدة الأساسية التي تهمك في القراءة التاريخية
-                display_columns = [
-                    'Project', 'Main Position', 'Centre', 'Start Date', 
-                    'Contract End Date', 'the Actual end contract', 'Net Salary', 'Notes'
-                ]
-                # عرض الجدول بشكل مرتب
-                st.table(query[display_columns])
-
-        elif any([search_id, search_case, search_phone, search_name]):
-            st.error("❌ لم يتم العثور على أي سجلات مطابقة للبيانات المدخلة.")
-
     except Exception as e:
-        st.error(f"حدث خطأ أثناء معالجة البيانات: {e}")
-else:
-    st.info("💡 يرجى رفع ملف الإكسل لبدء عملية الفرز والبحث.")
+        st.error(f"خطأ في الاتصال بقاعدة البيانات: {e}")
+        st.stop()
+
+    # --- 3. الشريط الجانبي (إضافة بيانات وتحديث) ---
+    st.sidebar.title("🛠 خيارات التحكم")
+    
+    if st.sidebar.button("🔄 تحديث البيانات"):
+        st.cache_data.clear()
+        st.rerun()
+
+    st.sidebar.divider()
+    st.sidebar.subheader("➕ إضافة متطوع جديد")
+    with st.sidebar.form("add_form"):
+        new_name = st.text_input("الاسم الكامل")
+        new_id = st.text_input("الرقم الفردي")
+        new_status = st.selectbox("الحالة", ["Active", "Resigned", "Standby"])
+        submit_button = st.form_submit_button("حفظ في القاعدة")
+        
+        if submit_button:
+            # هنا يمكنك إضافة كود الحفظ (Write) لاحقاً عند تفعيل صلاحيات الكتابة
+            st.sidebar.info("تم إرسال الطلب (تحتاج لربط صلاحيات الكتابة في Google Console)")
+
+    # --- 4. واجهة العرض الرئيسية ---
+    st.title("📊 نظام إدارة وأرشفة سجلات المتطوعين - 2026")
+    
+    # صناديق الإحصائيات السريعة (مثل مثال GDP الذي أعجبك)
+    col1, col2, col3 = st.columns(3)
+    col1.metric("إجمالي المتطوعين", len(df))
+    if 'Status' in df.columns:
+        active_count = len(df[df['Status'] == 'Active'])
+        col2.metric("الحالات النشطة", active_count)
+        col3.metric("نسبة الإنجاز", f"{(active_count/len(df)*100):.1f}%")
+
+    st.divider()
+
+    # --- 5. نظام البحث الرباعي ---
+    st.subheader("🔍 محرك البحث السريع")
+    s1, s2, s3, s4 = st.columns(4)
+    with s1: search_id = st.text_input("الرقم الفردي/الأمني")
+    with s2: search_name = st.text_input("اسم المتطوع")
+    with s3: search_phone = st.text_input("رقم الهاتف")
+    with s4: filter_status = st.selectbox("تصفية حسب الحالة", ["الكل"] + list
