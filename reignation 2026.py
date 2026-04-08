@@ -8,66 +8,67 @@ import base64
 # --- 1. إعدادات الصفحة والهوية البصرية ---
 st.set_page_config(page_title="نظام HR مخيم الأزرق 2026", layout="wide", page_icon="📝")
 
-# وظيفة لتحويل صورة الخلفية المحلية إلى Base64 لتعمل كخلفية للصفحة
 def get_base64_of_bin_file(bin_file):
     try:
         with open(bin_file, 'rb') as f:
             data = f.read()
         return base64.b64encode(data).decode()
-    except FileNotFoundError:
+    except:
         return None
 
-# --- إضافة الخلفية وتحسين مظهر التبويبات عبر CSS ---
-# ملاحظة: تأكد من وجود ملف 'background.jpg' في GitHub لتفعيل الخلفية
+# تحسين الـ CSS للخلفية ووضوح النصوص
 bg_str = get_base64_of_bin_file('background.jpg')
-if bg_str:
-    st.markdown(
-        f"""
-        <style>
-        .stApp {{
-            background-image: url("data:image/png;base64,{bg_str}");
-            background-size: cover;
-            background-attachment: fixed;
-        }}
-        /* تحسين مظهر الحاويات لتكون مقروءة فوق الخلفية (شفافية بيضاء) */
-        [data-testid="stVerticalBlock"] > div {{
-            background-color: rgba(255, 255, 255, 0.88); 
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }}
-        [data-testid="stElementToolbar"] {{ display: none; }} /* إخفاء أدوات الجدول للحماية */
-        .stTabs [data-baseweb="tab-list"] {{ gap: 15px; }}
-        .stTabs [data-baseweb="tab"] {{ height: 50px; background-color: #f0f2f6; border-radius: 5px; font-weight: bold; }}
-        .stTabs [aria-selected="true"] {{ background-color: #007bff; color: white; }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-else:
-    # تنسيقات أساسية في حال عدم وجود خلفية
-    st.markdown("""<style>[data-testid="stElementToolbar"] { display: none; }</style>""", unsafe_allow_html=True)
-
+st.markdown(f"""
+    <style>
+    .stApp {{
+        background-image: url("data:image/png;base64,{bg_str if bg_str else ''}");
+        background-size: cover;
+        background-attachment: fixed;
+    }}
+    /* طبقة تعتيم خفيفة لجعل الواجهة مريحة للعين */
+    .main {{
+        background-color: rgba(255, 255, 255, 0.85);
+        border-radius: 15px;
+        padding: 20px;
+    }}
+    /* إخفاء أدوات الجدول للحماية */
+    [data-testid="stElementToolbar"] {{ display: none; }}
+    
+    /* تنسيق العناوين والتبويبات */
+    h1, h2, h3 {{ color: #004a99; font-family: 'Arial'; }}
+    .stTabs [data-baseweb="tab-list"] {{ gap: 10px; }}
+    .stTabs [data-baseweb="tab"] {{ 
+        background-color: #f8f9fa; 
+        border-radius: 5px; 
+        padding: 10px 20px;
+        font-weight: bold;
+    }}
+    .stTabs [aria-selected="true"] {{ background-color: #007bff; color: white; }}
+    </style>
+""", unsafe_allow_html=True)
 
 USER_CREDENTIALS = {"zaid": "11111"}
+
+def show_logos(key_suffix):
+    """وظيفة لعرض الشعارين بشكل مرتب لتجنب خطأ التكرار"""
+    col_l, col_c, col_r = st.columns([1, 4, 1])
+    with col_l:
+        try: st.image("unicef_logo.png", width=140)
+        except: st.write("UNICEF Logo")
+    with col_r:
+        try: st.image("bdc_logo.png", width=140)
+        except: st.write("BDC Logo")
+    st.divider()
 
 def check_password():
     if "authenticated" not in st.session_state:
         st.session_state["authenticated"] = False
     
     if not st.session_state["authenticated"]:
-        # --- إضافة الشعارين في صفحة تسجيل الدخول أيضاً لمظهر احترافي ---
-        col_log_l, col_log_c, col_log_r = st.columns([1, 2, 1])
-        with col_log_l:
-            try: st.image("unicef_logo.png", width=150)
-            except: pass
-        with col_log_r:
-            try: st.image("bdc_logo.png", width=150)
-            except: pass
-            
-        st.title("🔐 تسجيل الدخول - نظام HR الأزرق")
-        user = st.text_input("اسم المستخدم")
-        pw = st.text_input("كلمة المرور", type="password")
+        show_logos("login") # عرض الشعارات في صفحة الدخول
+        st.title("🔐 تسجيل الدخول - نظام HR")
+        user = st.text_input("اسم المستخدم", key="user_in")
+        pw = st.text_input("كلمة المرور", type="password", key="pw_in")
         if st.button("دخول"):
             if user in USER_CREDENTIALS and USER_CREDENTIALS[user] == pw:
                 st.session_state["authenticated"] = True
@@ -78,25 +79,68 @@ def check_password():
     return True
 
 if check_password():
-    # --- 2. إضافة الشعارين في أعلى الصفحة الرئيسية بعد الدخول ---
-    # ننشئ 3 أعمدة: الأول للشعار الأيسر (UNICEF)، الثاني فارغ (مساحة)، والثالث للشعار الأيمن (BDC)
-    col_unicef, col_spacer, col_bdc = st.columns([1.5, 5, 1.5])
+    show_logos("main") # عرض الشعارات في الصفحة الرئيسية
     
-    with col_unicef:
-        try:
-            # شعار UNICEF على اليسار ( width=200 للحجم المناسب)
-            st.image("unicef_logo.png", width=200)
-        except:
-            st.error("💡 تأكد من رفع 'unicef_logo.png' على GitHub")
-            
-    with col_bdc:
-        try:
-            # شعار BDC على اليمين ( width=200 للحجم المناسب)
-            st.image("bdc_logo.png", width=200)
-        except:
-            st.error("💡 تأكد من رفع 'bdc_logo.png' على GitHub")
+    # --- 2. جلب البيانات من SharePoint ---
+    SHAREPOINT_URL = "https://bdcjoorg-my.sharepoint.com/:x:/g/personal/zaltahat_bdc_org_jo/IQABP_FEs97DRZNQFxtFvyRGAe2xdQxDW6L3jTRC3S803SU?download=1"
 
-    st.divider() # خط فاصل بين الشعارين وعنوان النظام
+    @st.cache_data(ttl=600)
+    def load_data():
+        try:
+            response = requests.get(SHAREPOINT_URL)
+            data = pd.read_excel(BytesIO(response.content))
+            for col in data.columns:
+                data[col] = data[col].astype(str).str.replace('.0', '', regex=False).str.strip()
+            return data
+        except:
+            return None
+
+    df = load_data()
+
+    if df is not None:
+        tab1, tab2, tab3 = st.tabs(["🔍 البحث والتدقيق", "📊 الإحصائيات", "⚙️ الإعدادات"])
+
+        with tab1:
+            st.subheader("🔍 محرك البحث الذكي")
+            search_query = st.text_input("ابحث بالاسم، الرقم الفردي، أو الهاتف", key="search_box")
+            
+            if search_query:
+                filtered_df = df[df.astype(str).apply(lambda x: x.str.contains(search_query, case=False, na=False)).any(axis=1)]
+                st.success(f"تم العثور على {len(filtered_df)} سجل")
+                st.dataframe(filtered_df, use_container_width=True)
+            else:
+                st.dataframe(df.head(10), use_container_width=True)
+
+        with tab2:
+            st.subheader("📊 لوحة تحكم البيانات")
+            c1, c2 = st.columns(2)
+            with c1:
+                if 'EmpGender' in df.columns:
+                    st.markdown("**توزيع الجنس**")
+                    g_data = df['EmpGender'].value_counts().reset_index()
+                    g_data.columns = ['Gender', 'Count']
+                    fig = px.pie(g_data, names='Gender', values='Count', color='Gender',
+                                color_discrete_map={'Male':'#3498db','Female':'#e91e63'}, hole=0.4)
+                    st.plotly_chart(fig, use_container_width=True)
+            with c2:
+                if 'Project' in df.columns:
+                    st.markdown("**توزيع المشاريع**")
+                    fig_p = px.pie(df, names='Project', hole=0.4, color_discrete_sequence=px.colors.qualitative.Pastel)
+                    st.plotly_chart(fig_p, use_container_width=True)
+
+        with tab3:
+            st.subheader("⚙️ خيارات النظام")
+            st.info("النظام يعمل بأمان والقاعدة متصلة بـ SharePoint")
+            if st.button("🚪 تسجيل الخروج"):
+                st.session_state["authenticated"] = False
+                st.rerun()
+
+        st.sidebar.image("bdc_logo.png", width=100) if bg_str else None
+        if st.sidebar.button("🔄 تحديث البيانات"):
+            st.cache_data.clear()
+            st.rerun()
+    else:
+        st.error("⚠️ فشل في تحميل البيانات")خط فاصل بين الشعارين وعنوان النظام
 
 if check_password():
     # --- 2. جلب البيانات من SharePoint ---
