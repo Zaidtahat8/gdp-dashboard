@@ -87,14 +87,29 @@ if check_password():
         # عرض النتائج في جدول تفاعلي
         st.dataframe(filtered_df, use_container_width=True)
         
-        # زر تحميل النتائج المفلترة
-        if not filtered_df.empty:
-            csv = filtered_df.to_csv(index=False).encode('utf-8-sig')
-            st.download_button(
-                label="📥 تحميل النتائج الحالية كملف Excel/CSV",
-                data=csv,
-                file_name="Azraq_HR_Search_Results.csv",
-                mime="text/csv"
-            )
+        # منطق الفلترة والتحميل المشروط
+        if search_query:
+            # البحث عن النتائج المطابقة
+            filtered_df = df[df.astype(str).apply(lambda x: x.str.contains(search_query, case=False, na=False)).any(axis=1)]
+            
+            st.info(f"💡 تم العثور على {len(filtered_df)} نتيجة مطابقة.")
+            st.dataframe(filtered_df, use_container_width=True)
+            
+            # ميزة الأمان: زر التحميل يظهر فقط إذا كان هناك بحث ونتاجه أقل من كامل الملف
+            if 0 < len(filtered_df) < len(df):
+                csv = filtered_df.to_csv(index=False).encode('utf-8-sig')
+                st.download_button(
+                    label="📥 تحميل نتائج البحث فقط (CSV)",
+                    data=csv,
+                    file_name="Search_Results.csv",
+                    mime="text/csv"
+                )
+        else:
+            # في حال عدم وجود بحث، نعرض رسالة تنبيه ونخفي زر التحميل
+            st.write("الرجاء إدخال بيانات في خانة البحث أعلاه لعرض السجلات وتحميلها.")
+            # عرض عينة بسيطة جداً من البيانات (أول 5 أسطر فقط) لإعطاء انطباع عن الجدول دون كشفه بالكامل
+            st.dataframe(df.head(5), use_container_width=True)
+            st.warning("⚠️ تحميل قاعدة البيانات كاملة غير مسموح به. استخدم البحث لاستخراج بيانات محددة.")
+
     else:
-        st.warning("⚠️ يرجى التأكد من أن ملف SharePoint متاح للوصول.")
+        st.warning("⚠️ لا يمكن الوصول للقاعدة حالياً.")
