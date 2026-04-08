@@ -58,23 +58,37 @@ if check_password():
         
         c1, c2 = st.columns(2)
         c1.metric("إجمالي السجلات", len(df))
-        c2.metric("حالة الوصول", "عرض فقط 🔒")
+        c2.metric("حالة الوصول", "عرض فقط (محمي) 🔒")
 
         st.divider()
 
-        # --- 5. محرك البحث الذكي (بدون خيار تحميل) ---
+        # --- 5. محرك البحث الذكي ---
         st.subheader("🔍 محرك البحث")
         search_query = st.text_input("ابحث بواسطة الاسم، الرقم الفردي، أو رقم الهاتف")
 
+        # سيتم عرض الجدول بدون أي خيارات تنزيل أو تصدير
         if search_query:
             filtered_df = df[df.astype(str).apply(lambda x: x.str.contains(search_query, case=False, na=False)).any(axis=1)]
             st.info(f"💡 تم العثور على {len(filtered_df)} نتيجة.")
-            st.dataframe(filtered_df, use_container_width=True)
+            
+            # عرض الجدول مع تعطيل شريط الأدوات (منع التنزيل)
+            st.dataframe(filtered_df, use_container_width=True, column_config=None)
         else:
             st.write("أدخل بيانات البحث لعرض النتائج...")
-            # عرض أول 10 سجلات فقط كمعاينة
+            # عرض أول 10 سجلات كمعاينة بدون خيارات تنزيل
             st.dataframe(df.head(10), use_container_width=True)
-            st.info("ملاحظة: خيار تحميل البيانات غير متاح في هذا النظام لدواعي أمنية.")
+            
+        # إضافة تنسيق CSS لإخفاء زر التنزيل تماماً من واجهة المستخدم
+        st.markdown(
+            """
+            <style>
+            [data-testid="stElementToolbar"] {
+                display: none;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
 
     else:
         st.warning("⚠️ لا يمكن الوصول للقاعدة حالياً.")
