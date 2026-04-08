@@ -3,26 +3,69 @@ import pandas as pd
 import requests
 from io import BytesIO
 import plotly.express as px
+import base64
 
-# --- 1. إعدادات الصفحة والأمان ---
-st.set_page_config(page_title="نظام HR مخيم الأزرق 2026", layout="wide")
+# --- 1. إعدادات الصفحة والهوية البصرية ---
+st.set_page_config(page_title="نظام HR مخيم الأزرق 2026", layout="wide", page_icon="📝")
 
-# CSS لإخفاء أدوات الجدول وتحسين المظهر
-st.markdown("""
-    <style>
-    [data-testid="stElementToolbar"] { display: none; }
-    .stTabs [data-baseweb="tab-list"] { gap: 24px; }
-    .stTabs [data-baseweb="tab"] { height: 50px; background-color: #f0f2f6; border-radius: 5px; }
-    </style>
-""", unsafe_allow_html=True)
+# وظيفة لتحويل صورة الخلفية المحلية إلى Base64 لتعمل كخلفية للصفحة
+def get_base64_of_bin_file(bin_file):
+    try:
+        with open(bin_file, 'rb') as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    except FileNotFoundError:
+        return None
 
-USER_CREDENTIALS = {"zaid": "11111"}
+# --- إضافة الخلفية وتحسين مظهر التبويبات عبر CSS ---
+# ملاحظة: تأكد من وجود ملف 'background.jpg' في GitHub لتفعيل الخلفية
+bg_str = get_base64_of_bin_file('background.jpg')
+if bg_str:
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: url("data:image/png;base64,{bg_str}");
+            background-size: cover;
+            background-attachment: fixed;
+        }}
+        /* تحسين مظهر الحاويات لتكون مقروءة فوق الخلفية (شفافية بيضاء) */
+        [data-testid="stVerticalBlock"] > div {{
+            background-color: rgba(255, 255, 255, 0.88); 
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }}
+        [data-testid="stElementToolbar"] {{ display: none; }} /* إخفاء أدوات الجدول للحماية */
+        .stTabs [data-baseweb="tab-list"] {{ gap: 15px; }}
+        .stTabs [data-baseweb="tab"] {{ height: 50px; background-color: #f0f2f6; border-radius: 5px; font-weight: bold; }}
+        .stTabs [aria-selected="true"] {{ background-color: #007bff; color: white; }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+else:
+    # تنسيقات أساسية في حال عدم وجود خلفية
+    st.markdown("""<style>[data-testid="stElementToolbar"] { display: none; }</style>""", unsafe_allow_html=True)
+
+
+USER_CREDENTIALS = {"alaa_admin": "azraq2026"}
 
 def check_password():
     if "authenticated" not in st.session_state:
         st.session_state["authenticated"] = False
+    
     if not st.session_state["authenticated"]:
-        st.title("🔐 تسجيل الدخول")
+        # --- إضافة الشعارين في صفحة تسجيل الدخول أيضاً لمظهر احترافي ---
+        col_log_l, col_log_c, col_log_r = st.columns([1, 2, 1])
+        with col_log_l:
+            try: st.image("unicef_logo.png", width=150)
+            except: pass
+        with col_log_r:
+            try: st.image("bdc_logo.png", width=150)
+            except: pass
+            
+        st.title("🔐 تسجيل الدخول - نظام HR الأزرق")
         user = st.text_input("اسم المستخدم")
         pw = st.text_input("كلمة المرور", type="password")
         if st.button("دخول"):
@@ -33,6 +76,27 @@ def check_password():
                 st.error("❌ البيانات غير صحيحة")
         return False
     return True
+
+if check_password():
+    # --- 2. إضافة الشعارين في أعلى الصفحة الرئيسية بعد الدخول ---
+    # ننشئ 3 أعمدة: الأول للشعار الأيسر (UNICEF)، الثاني فارغ (مساحة)، والثالث للشعار الأيمن (BDC)
+    col_unicef, col_spacer, col_bdc = st.columns([1.5, 5, 1.5])
+    
+    with col_unicef:
+        try:
+            # شعار UNICEF على اليسار ( width=200 للحجم المناسب)
+            st.image("unicef_logo.png", width=200)
+        except:
+            st.error("💡 تأكد من رفع 'unicef_logo.png' على GitHub")
+            
+    with col_bdc:
+        try:
+            # شعار BDC على اليمين ( width=200 للحجم المناسب)
+            st.image("bdc_logo.png", width=200)
+        except:
+            st.error("💡 تأكد من رفع 'bdc_logo.png' على GitHub")
+
+    st.divider() # خط فاصل بين الشعارين وعنوان النظام
 
 if check_password():
     # --- 2. جلب البيانات من SharePoint ---
