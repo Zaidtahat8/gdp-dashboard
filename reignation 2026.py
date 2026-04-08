@@ -7,7 +7,7 @@ from io import BytesIO
 st.set_page_config(page_title="نظام تدقيق مخيم الأزرق 2026", layout="wide")
 
 # بيانات الدخول
-USER_CREDENTIALS = {"alaa_admin": "azraq2026"}
+USER_CREDENTIALS = {"Zaid": "1234"}
 
 def check_password():
     if "authenticated" not in st.session_state:
