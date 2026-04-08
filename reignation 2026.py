@@ -71,19 +71,30 @@ if check_password():
 
         st.divider()
 
-        # --- 5. محرك البحث ---
-        st.subheader("🔍 محرك البحث الذكي")
-       search_query = st.text_input("ابحث بواسطة: (الاسم، الرقم الفردي/Case Number، رقم الهاتف، أو الرقم الأمني)")
+       # --- 5. محرك البحث المطور ---
+        st.subheader("🔍 محرك البحث المتعدد")
+        # وصف للمستخدم يوضح إمكانيات البحث الجديدة
+        search_query = st.text_input("ابحث بواسطة: (الاسم، الرقم الفردي/Case Number، رقم الهاتف، أو الرقم الأمني)")
 
-        # منطق الفلترة
+        # منطق الفلترة المطور ليشمل كافة الأعمدة بما فيها الهاتف والـ Case Number
         if search_query:
+            # البحث في كافة الأعمدة (بما يشمل رقم الهاتف والـ Case Number)
             filtered_df = df[df.astype(str).apply(lambda x: x.str.contains(search_query, case=False, na=False)).any(axis=1)]
+            st.info(f"💡 تم العثور على {len(filtered_df)} نتيجة مطابقة لبحثك.")
         else:
             filtered_df = df
 
-        # عرض النتائج
+        # عرض النتائج في جدول تفاعلي
         st.dataframe(filtered_df, use_container_width=True)
         
-        # زر التحميل
-        csv = filtered_df.to_csv(index=False).encode('utf-8-sig')
-        st.download_button("📥 تحميل النتائج الحالية", data=csv, file_name="Azraq_HR_Data.csv", mime="text/csv")
+        # زر تحميل النتائج المفلترة
+        if not filtered_df.empty:
+            csv = filtered_df.to_csv(index=False).encode('utf-8-sig')
+            st.download_button(
+                label="📥 تحميل النتائج الحالية كملف Excel/CSV",
+                data=csv,
+                file_name="Azraq_HR_Search_Results.csv",
+                mime="text/csv"
+            )
+    else:
+        st.warning("⚠️ يرجى التأكد من أن ملف SharePoint متاح للوصول.")
