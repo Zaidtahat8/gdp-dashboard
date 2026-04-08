@@ -73,7 +73,7 @@ if check_password():
 
         # --- 5. محرك البحث ---
         st.subheader("🔍 محرك البحث الذكي")
-        search_query = st.text_input("ادخل الاسم أو الرقم للبحث الفوري")
+       search_query = st.text_input("ابحث بواسطة: (الاسم، الرقم الفردي/Case Number، رقم الهاتف، أو الرقم الأمني)")
 
         # منطق الفلترة
         if search_query:
