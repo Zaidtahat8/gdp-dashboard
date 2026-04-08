@@ -26,8 +26,8 @@ st.markdown(f"""
     }}
     .main {{
         background-color: rgba(255, 255, 255, 0.9);
-        border-radius: 15px;
-        padding: 30px;
+        border-radius: 10px;
+        padding: 20px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }}
     [data-testid="stElementToolbar"] {{ display: none; }}
