@@ -58,7 +58,7 @@ if check_password():
         
         c1, c2 = st.columns(2)
         c1.metric("إجمالي السجلات", len(df))
-        c2.metric("حالة الوصول", "عرض فقط (محمي) 🔒")
+        c2.metric("حالة الوصول", "متصل 🔒")
 
         st.divider()
 
