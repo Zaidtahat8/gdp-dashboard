@@ -33,7 +33,7 @@ def check_password():
         st.session_state["authenticated"] = False
     if not st.session_state["authenticated"]:
         show_logos("login_page")
-        st.title("🔐 Log in")
+        st.title("🔐 Login page")
         u = st.text_input("User", key="u_login")
         p = st.text_input("Password", type="password", key="p_login")
         if st.button("دخول"):
