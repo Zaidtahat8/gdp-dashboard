@@ -42,10 +42,10 @@ def show_logos(unique_key):
     """عرض الشعارات بشكل متوازن لتجنب أخطاء التكرار"""
     c_l, c_spacer, c_r = st.columns([1, 4, 1])
     with c_l:
-        try: st.image("unicef_logo.png", width=130)
+        try: st.image("unicef_logo.png", width=200)
         except: st.write("UNICEF")
     with c_r:
-        try: st.image("bdc_logo.png", width=130)
+        try: st.image("bdc_logo.png", width=200)
         except: st.write("BDC")
     st.divider()
 
@@ -54,9 +54,9 @@ def check_password():
         st.session_state["authenticated"] = False
     if not st.session_state["authenticated"]:
         show_logos("login_page")
-        st.title("🔐 تسجيل الدخول")
-        u = st.text_input("اسم المستخدم", key="u_login")
-        p = st.text_input("كلمة المرور", type="password", key="p_login")
+        st.title("🔐 Log in")
+        u = st.text_input("User", key="u_login")
+        p = st.text_input("Password", type="password", key="p_login")
         if st.button("دخول"):
             if u in USER_CREDENTIALS and USER_CREDENTIALS[u] == p:
                 st.session_state["authenticated"] = True
