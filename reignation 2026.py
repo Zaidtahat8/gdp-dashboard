@@ -49,7 +49,7 @@ else:
     st.markdown("""<style>[data-testid="stElementToolbar"] { display: none; }</style>""", unsafe_allow_html=True)
 
 
-USER_CREDENTIALS = {"alaa_admin": "azraq2026"}
+USER_CREDENTIALS = {"zaid": "11111"}
 
 def check_password():
     if "authenticated" not in st.session_state:
