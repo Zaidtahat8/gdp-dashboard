@@ -6,8 +6,7 @@ from io import BytesIO
 # --- 1. إعدادات الصفحة والأمان ---
 st.set_page_config(page_title="نظام تدقيق مخيم الأزرق 2026", layout="wide")
 
-# بيانات الدخول
-USER_CREDENTIALS = {"Zaid": "1234"}
+USER_CREDENTIALS = {"zaid": "1111"}
 
 def check_password():
     if "authenticated" not in st.session_state:
@@ -25,9 +24,7 @@ def check_password():
         return False
     return True
 
-# --- تنفيذ البرنامج بعد تسجيل الدخول ---
 if check_password():
-    
     # --- 2. جلب البيانات من SharePoint ---
     SHAREPOINT_URL = "https://bdcjoorg-my.sharepoint.com/:x:/g/personal/zaltahat_bdc_org_jo/IQABP_FEs97DRZNQFxtFvyRGAe2xdQxDW6L3jTRC3S803SU?download=1"
 
@@ -35,15 +32,12 @@ if check_password():
     def load_data():
         try:
             response = requests.get(SHAREPOINT_URL)
-            # قراءة ملف الإكسل
             data = pd.read_excel(BytesIO(response.content))
-            
-            # تنظيف البيانات الأساسية وتحويل الأعمدة الرقمية لنصوص
             for col in data.columns:
                 data[col] = data[col].astype(str).str.replace('.0', '', regex=False).str.strip()
             return data
         except Exception as e:
-            st.error(f"❌ خطأ في الاتصال بقاعدة البيانات: {e}")
+            st.error(f"❌ خطأ في الاتصال بقاعدة البيانات")
             return None
 
     df = load_data()
@@ -51,8 +45,6 @@ if check_password():
     if df is not None:
         # --- 3. الشريط الجانبي ---
         st.sidebar.title("🛠 خيارات التحكم")
-        
-        # تصحيح السطر الذي ظهر فيه الخطأ في الصورة
         if st.sidebar.button("تحديث البيانات"):
             st.cache_data.clear()
             st.rerun()
@@ -64,14 +56,13 @@ if check_password():
         # --- 4. واجهة العرض الرئيسية ---
         st.title("📊 نظام إدارة وأرشفة سجلات المتطوعين - 2026")
         
-        # إحصائيات علوية
         c1, c2 = st.columns(2)
         c1.metric("إجمالي السجلات", len(df))
-        c2.metric("حالة القاعدة", "متصلة ✅")
+        c2.metric("حالة الوصول", "عرض فقط 🔒")
 
         st.divider()
 
-   # --- 5. محرك البحث الذكي (بدون خيار تحميل) ---
+        # --- 5. محرك البحث الذكي (بدون خيار تحميل) ---
         st.subheader("🔍 محرك البحث")
         search_query = st.text_input("ابحث بواسطة الاسم، الرقم الفردي، أو رقم الهاتف")
 
