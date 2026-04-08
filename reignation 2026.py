@@ -15,27 +15,6 @@ def get_base64(bin_file):
     except:
         return None
 
-# تحسين الخلفية ووضوح النصوص (إضافة طبقة حماية بيضاء)
-bg_str = get_base64('background.jpg')
-st.markdown(f"""
-    <style>
-    .stApp {{
-        background-image: url("data:image/png;base64,{bg_str if bg_str else ''}");
-        background-size: cover;
-        background-attachment: fixed;
-    }}
-    .main {{
-        background-color: rgba(255, 255, 255, 0.9);
-        border-radius: 10px;
-        padding: 20px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }}
-    [data-testid="stElementToolbar"] {{ display: none; }}
-    .stTabs [data-baseweb="tab"] {{ font-weight: bold; background-color: #f8f9fa; border-radius: 5px; }}
-    .stTabs [aria-selected="true"] {{ background-color: #007bff; color: white; }}
-    </style>
-""", unsafe_allow_html=True)
-
 USER_CREDENTIALS = {"zaid": "11111"}
 
 def show_logos(unique_key):
